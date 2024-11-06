@@ -17,3 +17,13 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+Route::controller(\App\Http\Controllers\PeticioneController::class)->group(function () {
+    Route::get('peticiones', 'index');
+    Route::get('mispeticiones', 'listmine');
+    Route::get('peticiones/{id}', 'show');
+    Route::delete('peticiones/{id}', 'delete');
+    Route::put('peticiones/firmar/{id}', 'firmar');
+    Route::put('peticiones/{id}', 'update');
+    Route::put('peticiones/estado/{id}', 'cambiarEstado');
+    Route::post('peticiones', 'store');
+});
