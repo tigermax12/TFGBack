@@ -6,6 +6,7 @@ use App\Models\Peticione;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Categoria;
+use Illuminate\Support\Facades\Validator;
 
 class PeticioneController extends Controller
 {

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Validator;
 class CategoriaController extends Controller
 {
     public function store(Request $request){
