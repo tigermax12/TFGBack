@@ -3,98 +3,138 @@
 namespace App\Http\Controllers;
 
 use App\Models\Peticione;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Categoria;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Exception;
 
 class PeticioneController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $peticiones = Peticione::all();
-        return $peticiones;
+        try {
+            $peticiones = Peticione::all();
+            return response()->json($peticiones, 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al obtener las peticiones'], 500);
+        }
     }
 
     public function listMine(Request $request)
     {
-        //parent::index()
-        //$user= Auth::user();
-        $id = 1;
-        $peticiones = Peticione::all()->where('user_id', $id);
-        return $peticiones;
+        try {
+            $user = Auth::user();
+            $peticiones = Peticione::where('user_id', $user->id)->get();
+            return response()->json($peticiones, 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al obtener tus peticiones'], 500);
+        }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'titulo' => 'required|max:255',
             'descripcion' => 'required',
             'destinatario' => 'required',
-            'categoria_id' => 'required',
-        // 'file' => 'required',
+            'categoria_id' => 'required|exists:categorias,id',
         ]);
-        $input = $request->all();
-        $category = Categoria::query()->findOrFail($request->input('categoria_id'));
-        $user = 1; //harcodeamos el usuario
-        //$user = Auth::user(); //asociarlo al usuario authenticado
-        $peticion = new Peticione($input);
-        $peticion->user()->associate($user);
-        $peticion->categoria()->associate($category);
-        $peticion->firmantes = 0;
-        $peticion->estado = 'pendiente';
-        $peticion->save();
-        return $peticion;
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 401);
+        }
+
+        try {
+            //$user = Auth::user();
+            $user= 1;
+            $category = Categoria::findOrFail($request->categoria_id);
+
+            $peticion = new Peticione($request->all());
+            $peticion->user()->associate($user);
+            $peticion->categoria()->associate($category);
+
+            $peticion->firmantes = 0;
+            $peticion->estado = 'pendiente';
+            $peticion->save();
+
+            return response()->json($peticion, 201);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Categoría no encontrada'], 404);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al crear la petición'], 500);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Request $request, $id)
     {
-        $peticion = Peticione::query()->findOrFail($id);
-        return $peticion;
+        try {
+            $peticion = Peticione::findOrFail($id);
+            return response()->json($peticion, 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Petición no encontrada'], 404);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
-        $peticion = Peticione::query()->findOrFail($id);
-        $peticion->update($request->all());
-        return $peticion;
+        try {
+            $peticion = Peticione::findOrFail($id);
+            $peticion->update($request->all());
+            return response()->json($peticion, 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Petición no encontrada'], 404);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al actualizar la petición'], 500);
+        }
     }
 
     public function firmar(Request $request, $id)
     {
-        $peticion = Peticione::query()->findOrFail($id);
-        //$user = Auth::user();
-        $user = 1;
-        $user_id = [$user];
-        //$user_id = [$user‐>id];
-        $peticion->firmas()->attach($user_id);
-        $peticion->firmantes = $peticion->firmantes + 1;
-        $peticion->save();
-        return $peticion;
+        try {
+            $peticion = Peticione::findOrFail($id);
+            $user = Auth::user();
+
+            if ($peticion->firmas()->where('user_id', $user->id)->exists()) {
+                return response()->json(['error' => 'Ya has firmado esta petición'], 400);
+            }
+
+            $peticion->firmas()->attach($user->id);
+            $peticion->increment('firmantes');
+
+            return response()->json($peticion, 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Petición no encontrada'], 404);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al firmar la petición'], 500);
+        }
     }
+
     public function cambiarEstado(Request $request, $id)
     {
-        $peticion = Peticione::query()->findOrFail($id);
-        $peticion->estado = 'aceptada';
-        $peticion->save();
-        return $peticion;
+        try {
+            $peticion = Peticione::findOrFail($id);
+            $peticion->estado = 'aceptada';
+            $peticion->save();
+            return response()->json($peticion, 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Petición no encontrada'], 404);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al cambiar el estado'], 500);
+        }
     }
+
     public function delete(Request $request, $id)
     {
-        $peticion = Peticione::query()->findOrFail($id);
-        $peticion->delete();
-        return $peticion;
+        try {
+            $peticion = Peticione::findOrFail($id);
+            $peticion->delete();
+            return response()->json(['message' => 'Petición eliminada'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Petición no encontrada'], 404);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al eliminar la petición'], 500);
+        }
     }
 }
