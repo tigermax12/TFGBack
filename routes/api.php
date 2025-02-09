@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PeticioneController;
@@ -27,12 +28,25 @@ Route::controller(PeticioneController::class)->group(function () {
     Route::get('peticiones', 'index');
     Route::get('mispeticiones', 'listmine');
     Route::get('peticiones/{id}', 'show');
-    Route::delete('peticiones/{id}', 'delete');
-    Route::put('peticiones/firmar/{id}', 'firmar');
-    Route::put('peticiones/{id}', 'update');
-    Route::put('peticiones/estado/{id}', 'cambiarEstado');
+    //Route::delete('peticiones/{id}', 'delete');
+    //Route::put('peticiones/firmar/{id}', 'firmar');
+    //Route::put('peticiones/{id}', 'update');
+    //Route::put('peticiones/estado/{id}', 'cambiarEstado');
     Route::post('peticiones', 'store');
 });
 Route::controller(CategoriaController::class)->group(function () {
     Route::post('categorias', 'store');
+});
+Route::controller(AuthController::class)->group(function () {
+    Route::post('login', 'login');
+    Route::post('register', 'register');
+    Route::post('logout', 'logout');
+    Route::post('refresh', 'refresh');
+    Route::get('me', 'me');
+});
+Route::middleware(['auth'])->group(function () {
+    Route::put('/peticiones/{peticion}', [PeticioneController::class, 'update']);
+    Route::delete('/peticiones/{peticion}', [PeticioneController::class, 'delete']);
+    Route::put('/peticiones/{id}/cambiarEstado', [PeticioneController::class, 'cambiarEstado']);
+    Route::post('/peticiones/{peticion}/firmar', [PeticioneController::class, 'firmar']);
 });

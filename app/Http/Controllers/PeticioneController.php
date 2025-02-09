@@ -12,6 +12,11 @@ use Exception;
 
 class PeticioneController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+    }
     public function index(Request $request)
     {
         try {
@@ -48,7 +53,7 @@ class PeticioneController extends Controller
 
         try {
             //$user = Auth::user();
-            $user= 1;
+            $user= 4;
             $category = Categoria::findOrFail($request->categoria_id);
 
             $peticion = new Peticione($request->all());
@@ -81,6 +86,7 @@ class PeticioneController extends Controller
     {
         try {
             $peticion = Peticione::findOrFail($id);
+            $this->authorize('update', $peticion);
             $peticion->update($request->all());
             return response()->json($peticion, 200);
         } catch (ModelNotFoundException $e) {
@@ -94,6 +100,7 @@ class PeticioneController extends Controller
     {
         try {
             $peticion = Peticione::findOrFail($id);
+            $this->authorize('firmar', $peticion);
             $user = Auth::user();
 
             if ($peticion->firmas()->where('user_id', $user->id)->exists()) {
@@ -115,8 +122,12 @@ class PeticioneController extends Controller
     {
         try {
             $peticion = Peticione::findOrFail($id);
+
+            $this->authorize('cambiarEstado', Auth::user());
+
             $peticion->estado = 'aceptada';
             $peticion->save();
+
             return response()->json($peticion, 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Petición no encontrada'], 404);
@@ -129,6 +140,7 @@ class PeticioneController extends Controller
     {
         try {
             $peticion = Peticione::findOrFail($id);
+            $this->authorize('delete', $peticion);
             $peticion->delete();
             return response()->json(['message' => 'Petición eliminada'], 200);
         } catch (ModelNotFoundException $e) {
