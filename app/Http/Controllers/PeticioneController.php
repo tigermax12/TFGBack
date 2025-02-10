@@ -52,8 +52,7 @@ class PeticioneController extends Controller
         }
 
         try {
-            //$user = Auth::user();
-            $user= 4;
+            $user = Auth::user();
             $category = Categoria::findOrFail($request->categoria_id);
 
             $peticion = new Peticione($request->all());
@@ -121,9 +120,18 @@ class PeticioneController extends Controller
     public function cambiarEstado(Request $request, $id)
     {
         try {
+            if (!Auth::check()) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
             $peticion = Peticione::findOrFail($id);
 
-            $this->authorize('cambiarEstado', Auth::user());
+            if ($request->user()->cannot('cambiarEstado', $peticion)) {
+                return response()->json(['message' => 'No estás autorizado para realizar esta acción'], 403);
+            }
+
+            if ($peticion->estado === 'aceptada') {
+                return response()->json(['message' => 'La petición ya está aceptada'], 200);
+            }
 
             $peticion->estado = 'aceptada';
             $peticion->save();
@@ -132,7 +140,9 @@ class PeticioneController extends Controller
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Petición no encontrada'], 404);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Error al cambiar el estado'], 500);
+            //return response()->json(['error' => 'Error al cambiar el estado'], 500);
+            return response()->json($e->getMessage(), 500);
+
         }
     }
 
