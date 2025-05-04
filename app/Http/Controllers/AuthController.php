@@ -23,6 +23,7 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
+
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -55,24 +56,34 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'rol' => 'required|string|max:50',
             'email' => 'required|string|email|max:255|unique:users',
+            'numero_trabajador' => 'required|string|max:50|unique:users',
             'password' => 'required|string|min:6',
+            'c_password' => 'required|same:password',
         ]);
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
-}
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password)
-// 'role_id'=> "2"
-        ]);
-//$token = Auth::login($user);
-        return response()->json([
-        'message' => "User successfully registered",
-        'user' => $user,
-    ]);
-}
+            }
+        try {
+            $user = User::create([
+                'name' => $request->get('name'),
+                'rol' => $request->get('rol'),
+                'email' => $request->get('email'),
+                'numero_trabajador' => $request->get('numero_trabajador'),
+                'password' => Hash::make($request->get('password')),
+            ]);
+            return response()->json([
+                'message' => "User successfully registered",
+                'user' => $user,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error during user registration',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
     /**
      * Get the authenticated User.
      *

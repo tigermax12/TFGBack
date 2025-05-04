@@ -23,9 +23,9 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'name',
         'email',
+        'rol',
+        'numero_trabajador',
         'password',
-        'role_id',
-        'estado',
     ];
 
     /**
@@ -52,11 +52,8 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-    public function peticione(){
-        return $this->hasMany(Peticione::class);
-    }
-
-    public function firmas(){
-        return $this->belongsToMany(Peticione::class, 'peticione_user');
+    public function ordenes()
+    {
+        return $this->hasMany(OrdenDeTrabajo::class, 'Id_user_creador');
     }
 }
