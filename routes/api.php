@@ -26,6 +26,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('logout', 'logout');
     Route::post('refresh', 'refresh');
     Route::get('me', 'me');
+    Route::get('index', 'index');
 });
 Route::controller(\App\Http\Controllers\OrdenDeTrabajoController::class)->group(function () {
     Route::get('peticiones', 'index');
@@ -35,5 +36,4 @@ Route::controller(\App\Http\Controllers\OrdenDeTrabajoController::class)->group(
     Route::get('ordendetrabajo', 'index');
     Route::put('ordendetrabajo/{id}/asignar', 'asignar');
     Route::get('/ordendetrabajo/{id}/completa', 'obtenerOrdenCompleta');
-
 });

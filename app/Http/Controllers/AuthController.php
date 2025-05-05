@@ -94,7 +94,12 @@ class AuthController extends Controller
         return response()->json(
         Auth::user(),
     );
-}
+    }
+    public function index()
+    {
+        $users = User::all();
+        return response()->json($users);
+    }
     /**
      * Log the user out (Invalidate the token).
      *
