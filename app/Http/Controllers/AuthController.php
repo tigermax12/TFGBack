@@ -33,7 +33,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json($validator-> errors(), 400);
         }
-// $request‐>validate();
+        // $request‐>validate();
         $credentials = $request->only('email', 'password');
         $token = Auth::attempt($credentials);
         if (!$token) {
@@ -44,14 +44,18 @@ class AuthController extends Controller
             ], 401);
         }
         $user = Auth::user();
+        $customTTL = 1440; // 24 horas en minutos
+        auth()->setTTL($customTTL);
+        $token = auth()->fromUser($user); // o auth()->login($user) si es login
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => env('JWT_TTL') * 60, //auth()‐>factory()‐>getTTL() * 60,
+            'expires_in' => $customTTL * 60, // Convertido a segundos
             'user' => $user,
         ]);
-
     }
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [

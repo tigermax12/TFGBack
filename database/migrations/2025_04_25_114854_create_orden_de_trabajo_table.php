@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('orden_de_trabajo', function (Blueprint $table) {
             $table->id('id_orden');
             $table->string('tipo_de_orden');
-            $table->string('prioridad')->nullable();
+            $table->integer('prioridad');
             $table->string('estado')->default('pendiente');
             $table->foreignId('id_user_creador')->constrained('users')->onDelete('cascade');
 
