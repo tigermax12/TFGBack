@@ -16,9 +16,37 @@ use Illuminate\Support\Facades\Auth;
 class OrdenDeTrabajoController extends Controller
 {
     public function index() {
-        $ordenes = OrdenDeTrabajo::all();
-        return response()->json($ordenes);
+        $ordenes = OrdenDeTrabajo::with(['limpieza.usuario', 'trasiego.usuario', 'clarificacion.usuario'])->get();
+
+        $ordenesTransformadas = $ordenes->map(function ($orden) {
+            $nombreOperario = null;
+
+            switch ($orden->tipo_de_orden) {
+                case 'limpieza':
+                    $nombreOperario = optional($orden->limpieza?->usuario)->name;
+                    break;
+                case 'trasiego':
+                    $nombreOperario = optional($orden->trasiego?->usuario)->name;
+                    break;
+                case 'clarificacion':
+                    $nombreOperario = optional($orden->clarificacion?->usuario)->name;
+                    break;
+            }
+
+            return [
+                'id_orden' => $orden->id_orden,
+                'tipo_de_orden' => $orden->tipo_de_orden,
+                'prioridad' => $orden->prioridad,
+                'estado' => $orden->estado,
+                'nombre_operario' => $nombreOperario,
+            ];
+        });
+
+
+        return response()->json($ordenesTransformadas);
     }
+
+
     public function store(Request $request)
     {
         DB::beginTransaction();
@@ -226,5 +254,33 @@ class OrdenDeTrabajoController extends Controller
             ], 500);
         }
     }
+    public function finalizarOrden(Request $request, $id)
+    {
+        try {
+            $orden = OrdenDeTrabajo::findOrFail($id);
+
+            if (strtolower($orden->estado) !== 'asignado') {
+                return response()->json([
+                    'error' => 'Solo se pueden finalizar órdenes en estado asignado.'
+                ], 400);
+            }
+
+            $orden->estado = 'finalizado';
+            $orden->Fecha_de_modificacion = now();
+            $orden->save();
+
+            return response()->json([
+                'message' => 'Orden finalizada correctamente',
+                'orden_id' => $orden->id_orden
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al finalizar la orden',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 
 }

@@ -15,4 +15,7 @@ class Trasiego extends Model
     {
         return $this->belongsTo(OrdenDeTrabajo::class, 'id_orden');
     }
+    public function usuario() {
+        return $this->belongsTo(User::class, 'operario');
+    }
 }

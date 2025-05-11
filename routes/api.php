@@ -38,5 +38,6 @@ Route::controller(\App\Http\Controllers\OrdenDeTrabajoController::class)->group(
     Route::get('/ordendetrabajo/{id}/completa', 'obtenerOrdenCompleta');
     Route::post('ordendetrabajo/autoasignar',  'autoasignar');
     Route::post('/ordendetrabajo/actualizar-orden/{id}', 'actualizarOrdenTipo');
+    Route::post('/ordendetrabajo/{id}/finalizar', 'finalizarOrden');
 
 });
