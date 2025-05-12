@@ -38,6 +38,9 @@ class OrdenDeTrabajoController extends Controller
                 'tipo_de_orden' => $orden->tipo_de_orden,
                 'prioridad' => $orden->prioridad,
                 'estado' => $orden->estado,
+                'fecha_de_realizacion'=> $orden->fecha_de_realizacion,
+                'fecha_de_creacion'=> $orden->fecha_de_creacion,
+                'fecha_de_finalizacion'=> $orden->fecha_de_finalizacion,
                 'nombre_operario' => $nombreOperario,
             ];
         });
