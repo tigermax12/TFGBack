@@ -42,6 +42,7 @@ class OrdenDeTrabajoController extends Controller
                 'fecha_de_creacion'=> $orden->fecha_de_creacion,
                 'fecha_de_finalizacion'=> $orden->fecha_de_finalizacion,
                 'nombre_operario' => $nombreOperario,
+                $orden,
             ];
         });
 
@@ -70,7 +71,7 @@ class OrdenDeTrabajoController extends Controller
                 'Id_user_creador' => $request->idUserCreador,
                 'Fecha_de_realizacion' => $request->fecha_de_realizacion,
                 'Fecha_de_creacion' => now(),
-                'Fecha_de_modificacion' => now(),
+                'Fecha_de_finalizacion' => now(),
             ]);
 
             $tipo = $request->tipoDeOrden;
@@ -269,7 +270,7 @@ class OrdenDeTrabajoController extends Controller
             }
 
             $orden->estado = 'finalizado';
-            $orden->Fecha_de_modificacion = now();
+            $orden->Fecha_de_finalizacion = now();
             $orden->save();
 
             return response()->json([

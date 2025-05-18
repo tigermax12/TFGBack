@@ -13,7 +13,7 @@ class OrdenDeTrabajo extends Model
         'Prioridad',
         'Estado',
         'Id_user_creador',
-        'Fecha_de_modificacion',
+        'Fecha_de_finalizacion',
         'Fecha_de_realizacion',
         'Fecha_de_creacion'
     ];
