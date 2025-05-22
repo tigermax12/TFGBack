@@ -65,18 +65,32 @@ class AuthController extends Controller
             'numero_trabajador' => 'required|string|max:50|unique:users',
             'password' => 'required|string|min:6',
             'c_password' => 'required|same:password',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
-            }
+        }
+
         try {
+            $profileImagePath = null;
+
+            if ($request->hasFile('profile_image')) {
+                $profileImagePath = $request->file('profile_image')->store('profile_images', 'public');
+            } else {
+                // Asigna la imagen por defecto
+                $profileImagePath = 'profile_images/default.jpg';
+            }
+
             $user = User::create([
                 'name' => $request->get('name'),
                 'rol' => $request->get('rol'),
                 'email' => $request->get('email'),
                 'numero_trabajador' => $request->get('numero_trabajador'),
                 'password' => Hash::make($request->get('password')),
+                'profile_image' => $profileImagePath,
             ]);
+
             return response()->json([
                 'message' => "User successfully registered",
                 'user' => $user,
@@ -93,11 +107,17 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
+
     public function me()
     {
-        return response()->json(
-        Auth::user(),
-    );
+        $authUser = Auth::user();
+        $user = User::find($authUser->id);
+
+        $user->profile_image_url = $user->profile_image
+            ? asset('storage/' . $user->profile_image)
+            : null;
+
+        return response()->json($user);
     }
     public function index()
     {
