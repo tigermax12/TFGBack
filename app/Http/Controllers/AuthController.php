@@ -151,6 +151,51 @@ class AuthController extends Controller
         'user' => $user,
     ]);
 }
+    public function delete($id)
+    {
+        $authUser = Auth::user();
+        $targetUser = User::find($id);
+
+        if (!$targetUser) {
+            return response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        $roleHierarchy = [
+            'supervisor' => ['encargado', 'operario'],
+            'encargado' => ['operario'],
+            'operario' => [],
+        ];
+
+        if (!in_array($targetUser->rol, $roleHierarchy[$authUser->rol] ?? [])) {
+            return response()->json(['error' => 'No tienes permisos para eliminar este usuario'], 403);
+        }
+
+        $targetUser->delete();
+
+        return response()->json(['message' => 'Usuario eliminado exitosamente']);
+    }
+    public function changePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['error' => 'La contraseña actual es incorrecta.'], 401);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json(['message' => 'Contraseña actualizada correctamente.']);
+    }
 
 }
 

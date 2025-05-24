@@ -27,6 +27,8 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('refresh', 'refresh');
     Route::get('me', 'me');
     Route::get('index', 'index');
+    Route::delete('users/{id}', 'delete');
+    Route::post('change-password', 'changePassword');
 });
 Route::controller(\App\Http\Controllers\OrdenDeTrabajoController::class)->group(function () {
     Route::get('peticiones', 'index');
