@@ -12,7 +12,7 @@ use App\Models\Clarificacione;
 use App\Models\User;;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Validation\ValidationException;
 class OrdenDeTrabajoController extends Controller
 {
     public function index() {
@@ -56,7 +56,7 @@ class OrdenDeTrabajoController extends Controller
         DB::beginTransaction();
 
         try {
-            $request->validate([
+            $validated = $request->validate([
                 'tipoDeOrden' => 'required|string|in:limpieza,trasiego,clarificacion',
                 'prioridad' => 'required|integer',
                 'estado' => 'required|string',
@@ -65,16 +65,16 @@ class OrdenDeTrabajoController extends Controller
             ]);
 
             $orden = OrdenDeTrabajo::create([
-                'Tipo_de_Orden' => $request->tipoDeOrden,
-                'Prioridad' => $request->prioridad,
-                'Estado' => $request->estado,
-                'Id_user_creador' => $request->idUserCreador,
-                'Fecha_de_realizacion' => $request->fecha_de_realizacion,
+                'Tipo_de_Orden' => $validated['tipoDeOrden'],
+                'Prioridad' => $validated['prioridad'],
+                'Estado' => $validated['estado'],
+                'Id_user_creador' => $validated['idUserCreador'],
+                'Fecha_de_realizacion' => $validated['fecha_de_realizacion'],
                 'Fecha_de_creacion' => now(),
                 'Fecha_de_finalizacion' => now(),
             ]);
 
-            $tipo = $request->tipoDeOrden;
+            $tipo = $validated['tipoDeOrden'];
             $campos = $request->camposTipoOrden ?? [];
 
             switch ($tipo) {
@@ -116,6 +116,11 @@ class OrdenDeTrabajoController extends Controller
                 'orden' => $orden
             ], 201);
 
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
